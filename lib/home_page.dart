@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_app/pages/animated_page_header.dart';
 import 'package:flutter_app/copyright_footer.dart';
 import 'package:flutter_app/models/place_model.dart';
 import 'package:flutter_app/providers/favorites_provider.dart';
@@ -15,89 +16,179 @@ import 'package:flutter_app/pages/help_and_emergency_page.dart';
 import 'package:flutter_app/pages/shop_page.dart';
 import 'package:flutter_app/pages/transport_page.dart';
 import 'package:flutter_app/pages/waypoint_page.dart';
+import 'package:flutter_app/pages/place_detail_page.dart';
+import 'package:flutter_app/widgets/shared_widgets.dart';
 import 'package:provider/provider.dart';
 
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String username;
+  const HomePage({super.key, required this.username});
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
-  late AnimationController _controller;
-
-  final List<Widget> _pages = [
-    const HomeContent(),
-    const FavoritesPage(),
-    const ProfilePage(),
-    const SchedulePage(),
-    const HelpAndEmergencyPage(),
-  ];
+  late final List<Widget> _pages;
+  double _pageOffset = 0.0;
+  late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
+    _pages = [
+      HomeContent(username: widget.username),
+      const FavoritesPage(),
+      ProfilePage(username: widget.username),
+      const SchedulePage(),
+      const HelpAndEmergencyPage(),
+    ];
+    _pageController = PageController(initialPage: _currentIndex);
+    _pageController.addListener(() {
+      setState(() {
+        _pageOffset = _pageController.page ?? 0.0;
+      });
+    });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 450),
-        child: _pages[_currentIndex],
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1A237E), Color(0xFF4A148C)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.deepOrangeAccent,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorite"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_month), label: "Planner"),
-          BottomNavigationBarItem(icon: Icon(Icons.help), label: "Help/Emergency"),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => setState(() => _currentIndex = 3),
-        label: const Text('Planner'),
-        icon: const Icon(Icons.event),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: PageView(
+          controller: _pageController,
+          children: _pages,
+          onPageChanged: (index) {
+            // Tetap gunakan ini untuk update final index
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _onNavItemTapped(3),
+          backgroundColor: Colors.deepPurpleAccent,
+          foregroundColor: Colors.white,
+          elevation: 4.0,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.event_note_outlined),
+        ),
+        bottomNavigationBar: _buildBottomBar(),
       ),
     );
+  }
+
+  Widget _buildBottomBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1A237E), Color(0xFF4A148C)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: 0, offset: Offset(0, -2)),
+        ],
+      ),
+      child: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        color: Colors.transparent, // Warna dibuat transparan
+        elevation: 0, // Elevation dipindahkan ke Container
+        notchMargin: 8.0,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            _buildNavItem(Icons.home_outlined, Icons.home, 0, "Home"),
+            _buildNavItem(Icons.favorite_border, Icons.favorite, 1, "Favorites"),
+            const SizedBox(width: 48),
+            _buildNavItem(Icons.person_outline, Icons.person, 2, "Profile"),
+            _buildNavItem(Icons.help_outline, Icons.help, 4, "Help"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onNavItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+      _pageController.animateToPage(index,
+          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+    });
+  }
+
+  Widget _buildNavItem(IconData unselectedIcon, IconData selectedIcon, int index, String label) {
+    final isSelected = _currentIndex == index;
+    final color = isSelected ? Colors.white : Colors.white.withOpacity(0.6);
+    final icon = isSelected ? selectedIcon : unselectedIcon;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: Icon(icon, color: color, size: isSelected ? 28.0 : 24.0),
+          tooltip: label,
+          onPressed: () => _onNavItemTapped(index),
+        ),
+        AnimatedContainer(
+          // Gunakan durasi 0 agar indikator bergerak instan mengikuti scroll
+          duration: const Duration(milliseconds: 0),
+          height: 3,
+          width: _calculateIndicatorWidth(index),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(10),
+          ),
+        )
+      ],
+    );
+  }
+
+  double _calculateIndicatorWidth(int index) {
+    // Jarak antara index saat ini dan index target
+    double distance = (_pageOffset - index).abs();
+
+    // Jika jarak kurang dari 1 (artinya kita sedang transisi antar halaman ini)
+    if (distance < 1) {
+      // Lebar akan berkurang seiring menjauhnya dari halaman
+      return 18 * (1 - distance);
+    }
+    // Jika tidak, lebarnya 0
+    return 0;
   }
 }
 
 // ================= HOME CONTENT =================
 
 class HomeContent extends StatefulWidget {
-  const HomeContent({super.key});
+  final String username;
+  const HomeContent({super.key, required this.username});
 
   @override
   State<HomeContent> createState() => _HomeContentState();
 }
 
-class _HomeContentState extends State<HomeContent>
-    with SingleTickerProviderStateMixin {
-  // Menu items (Discover / Explore)
+class _HomeContentState extends State<HomeContent> with TickerProviderStateMixin {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   final List<Map<String, dynamic>> menuItems = [
     {"icon": Icons.hotel, "label": "Hotel", "page": const HotelPage()},
     {
@@ -148,7 +239,7 @@ class _HomeContentState extends State<HomeContent>
     {"title": "Magnet", "image": "assets/souvenirs/magnet.png"},
   ];
 
-  // Tambahan contoh data 
+  // Tambahan contoh data
   final List<Map<String, String>> homeList = const [
     {"title": "Tokyo Tower", "subtitle": "Popular landmarks in Tokyo"},
     {"title": "Kyoto Temple", "subtitle": "Historical temple in Kyoto"},
@@ -159,13 +250,14 @@ class _HomeContentState extends State<HomeContent>
 
   late final PageController _popularController;
   late final PageController _seasonController;
+  late AnimationController _pulseController;
   Timer? _popularAutoScroll;
   Timer? _seasonAutoScroll;
-  late AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(() => setState(() => _searchQuery = _searchController.text.toLowerCase()));
     _popularController = PageController(viewportFraction: 0.78);
     _seasonController = PageController(viewportFraction: 0.88);
     _pulseController = AnimationController(
@@ -175,7 +267,6 @@ class _HomeContentState extends State<HomeContent>
       upperBound: 1.04,
     )..repeat(reverse: true);
 
-    // Auto-scroll popular carousel
     _popularAutoScroll = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_popularController.hasClients) {
         final next = _popularController.page!.round() + 1;
@@ -188,7 +279,7 @@ class _HomeContentState extends State<HomeContent>
     });
 
     // Auto-scroll seasonal highlight
-    _seasonAutoScroll = Timer.periodic(const Duration(seconds: 3), (timer) {
+    _seasonAutoScroll = Timer.periodic(const Duration(seconds: 4), (timer) {
       if (_seasonController.hasClients) {
         final next = _seasonController.page!.round() + 1;
         _seasonController.animateToPage(
@@ -207,158 +298,133 @@ class _HomeContentState extends State<HomeContent>
     _popularController.dispose();
     _seasonController.dispose();
     _pulseController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
-
-  // quick palette
-  Gradient get _warmGradient => const LinearGradient(
-        colors: [Color(0xFFFFA726), Color(0xFFFF7043)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-
-  Gradient get _coolGradient => const LinearGradient(
-        colors: [Color(0xFF42A5F5), Color(0xFF7E57C2)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Container(
-        color: Colors.grey.shade50,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildHeroBanner(),
-            const SizedBox(height: 18),
-
-            _buildSectionTitle("Discover / Explore"),
-            _buildAnimatedMenuGrid(),
-
-            const SizedBox(height: 18),
-            _buildSectionTitle("Popular"),
-            _buildPopularCarousel(),
-
-            const SizedBox(height: 18),
-            _buildSectionTitle("Seasonal Highlight"),
-            _buildSeasonalHighlight(),
-
-            const SizedBox(height: 18),
-            _buildSectionTitle("Event & Promo"),
-            _buildEventsCarousel(),
-
-            const SizedBox(height: 18),
-            _buildSectionTitle("Souvenir Collection"),
-            _buildSouvenirRow(),
-
-            const SizedBox(height: 18),
-            _buildSectionTitle("Recommendation"),
-            _buildHomeList(),
-
-            const CopyrightFooter(),
-          ],
-        ),
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildHeroBanner(),
+          const SizedBox(height: 20),
+          _buildSearchBar(),
+          const SizedBox(height: 20),
+          _buildSectionTitle("Discover / Explore"),
+          _buildAnimatedMenuGrid(),
+          const SizedBox(height: 20),
+          _buildSectionTitle("Popular Places"),
+          _buildPopularCarousel(),
+          const SizedBox(height: 20),
+          _buildSectionTitle("Seasonal Highlight"),
+          _buildSeasonalHighlight(),
+          const SizedBox(height: 20),
+          _buildSectionTitle("Event & Promo"),
+          _buildEventsCarousel(),
+          const SizedBox(height: 20),
+          _buildSectionTitle("Souvenir Collection"),
+          _buildSouvenirRow(),
+          const SizedBox(height: 20),
+          _buildSectionTitle("Recommendation"),
+          _buildHomeList(),
+          const SizedBox(height: 20),
+          const CopyrightFooter(),
+        ],
       ),
     );
   }
 
   Widget _buildHeroBanner() {
-    return Hero(
-      tag: 'banner',
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4A148C), Color(0xFF7E57C2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 6))
+        ],
+      ),
       child: Stack(
         children: [
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: _warmGradient,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.deepOrange.withOpacity(0.25),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.transparent, Colors.black26],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-              ],
+              ),
             ),
           ),
-          Container(
-            height: 200,
-            padding: const EdgeInsets.all(16),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
                 ScaleTransition(
                   scale: _pulseController,
                   child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
+                    width: 90,
+                    height: 90,
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: _coolGradient,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 8,
-                        )
-                      ],
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF1A237E), Color(0xFF4A148C)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
-                    child: const Center(
-                      child: Icon(Icons.explore,
-                          size: 44, color: Colors.white),
-                    ),
+                    child: const Icon(Icons.explore, color: Colors.white, size: 40),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Welcome to Japan Tour App',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        'Discover, explore and enjoy — seasonal highlights & local events',
-                        style:
-                            TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
+                    children: [
+                      Text('Welcome, ${widget.username}!',
+                          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Poppins',)),
+                      const SizedBox(height: 6),
+                      const Text('Explore Japan — discover, travel, and enjoy!',
+                          style: TextStyle(color: Colors.white70, fontSize: 13, fontFamily: 'Poppins',)),
                     ],
                   ),
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return TextField(
+      controller: _searchController,
+      style: const TextStyle(color: Colors.black87, fontFamily: 'Poppins'),
+      decoration: InputDecoration(
+        hintText: 'Search recommendations...',
+        hintStyle: TextStyle(color: Colors.grey.shade600, fontFamily: 'Poppins'),
+        prefixIcon: const Icon(Icons.search, color: Colors.deepPurpleAccent),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.9),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       ),
     );
   }
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Container(
-            width: 6,
-            height: 24,
-            decoration: BoxDecoration(
-              gradient: _coolGradient,
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: 'Poppins')),
     );
   }
 
@@ -366,79 +432,45 @@ class _HomeContentState extends State<HomeContent>
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(top: 8),
       itemCount: menuItems.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 0.9,
       ),
       itemBuilder: (context, index) {
         final item = menuItems[index];
-        final color = Colors.primaries[index % Colors.primaries.length];
         return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: Duration(milliseconds: 350 + (index * 80)),
+          tween: Tween(begin: 0, end: 1),
+          duration: Duration(milliseconds: 300 + (index * 80)),
           builder: (context, value, child) {
             return Opacity(
               opacity: value,
-              child: Transform.translate(
-                offset: Offset(0, 24 * (1 - value)),
-                child: child,
-              ),
+              child: Transform.translate(offset: Offset(0, (1 - value) * 20), child: child),
             );
           },
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                if (item['page'] != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => item['page']),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${item['label']} page not implemented yet.')),
-                  );
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: LinearGradient(
-                    colors: [color.shade200, color.shade400],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                        color: color.withOpacity(0.25),
-                        blurRadius: 8,
-                        offset: const Offset(0, 6))
-                  ],
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => item['page']));
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF512DA8), Color(0xFF9575CD)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor: Colors.white,
-                      child: Icon(item['icon'], color: color.shade700),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      item['label'],
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold),
-                    )
-                  ],
-                ),
+                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6, offset: const Offset(0, 4))],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(item['icon'], color: Colors.white, size: 28),
+                  const SizedBox(height: 8),
+                  Text(item['label'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12, fontFamily: 'Poppins')),
+                ],
               ),
             ),
           ),
@@ -453,66 +485,8 @@ class _HomeContentState extends State<HomeContent>
       child: PageView.builder(
         controller: _popularController,
         itemCount: popularPlaces.length,
-        itemBuilder: (context, index) {
-          final place = popularPlaces[index];
-          return _PopularPlaceCard(place: place);
-        },
+        itemBuilder: (context, index) => _PopularPlaceCard(place: popularPlaces[index]),
       ),
-    );
-  }
-
-  Widget _buildHomeList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: homeList.length,
-      itemBuilder: (context, index) {
-        final item = homeList[index];
-        return _buildAnimatedItem(
-          index: index,
-          child: Card(
-            elevation: 3,
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.deepOrangeAccent,
-                child: Text(
-                  item['title']![0],
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              title: Text(item['title']!),
-              subtitle: Text(item['subtitle']!),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${item['title']} clicked')),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAnimatedItem({required int index, required Widget child}) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 400 + (index * 100)),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, _) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 40 * (1 - value)),
-            child: child,
-          ),
-        );
-      },
-      child: child,
     );
   }
 
@@ -533,51 +507,30 @@ class _HomeContentState extends State<HomeContent>
           final item = seasons[index];
           return Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${item['label']} selected')),
-                );
-              },
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Background Image
-                    Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(item['image']!),
-                          fit: BoxFit.cover,
-                        ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(item['image']!, fit: BoxFit.cover),
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black54],
                       ),
                     ),
-                    // Gradient Overlay
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Colors.black54],
-                        ),
-                      ),
+                  ),
+                  Positioned(
+                    left: 12,
+                    bottom: 12,
+                    child: Text(
+                      item['label']!,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Poppins'),
                     ),
-                    // Label Season
-                    Positioned(
-                      left: 12,
-                      bottom: 12,
-                      child: Text(
-                        item['label']!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           );
@@ -603,23 +556,17 @@ class _HomeContentState extends State<HomeContent>
                   Container(
                     width: 220,
                     decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(item['image']!),
-                        fit: BoxFit.cover,
-                      ),
+                      image: DecorationImage(image: AssetImage(item['image']!), fit: BoxFit.cover),
                     ),
                   ),
                   Container(
                     width: 220,
-                    color: Colors.black.withOpacity(0.30),
+                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.35)),
                     child: Center(
                       child: Text(
                         item['title']!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
                       ),
                     ),
                   )
@@ -634,7 +581,7 @@ class _HomeContentState extends State<HomeContent>
 
   Widget _buildSouvenirRow() {
     return SizedBox(
-      height: 150,
+      height: 120,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: souvenirs.length,
@@ -644,23 +591,19 @@ class _HomeContentState extends State<HomeContent>
             padding: const EdgeInsets.only(right: 12),
             child: Column(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(item['image']!),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                Container(
+                  width: 88,
+                  height: 88,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(image: AssetImage(item['image']!), fit: BoxFit.cover),
+                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   item['title']!,
-                  style: const TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: 13, color: Colors.white70, fontFamily: 'Poppins'),
                 ),
               ],
             ),
@@ -670,38 +613,64 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
+  Widget _buildHomeList() {
+    final filteredList = homeList.where((item) =>
+      item['title']!.toLowerCase().contains(_searchQuery) ||
+      item['subtitle']!.toLowerCase().contains(_searchQuery)
+    ).toList();
+
+    if (_searchQuery.isNotEmpty && filteredList.isEmpty) {
+      return const Center(child: Padding(
+        padding: EdgeInsets.all(20.0),
+        child: Text("No recommendations found.", style: TextStyle(color: Colors.white70, fontFamily: 'Poppins')),
+      ));
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: filteredList.length,
+      itemBuilder: (context, index) {
+        final item = filteredList[index];
+        return AnimatedListItem(
+          index: index,
+          child: Card(
+            color: const Color(0xFF4A148C).withOpacity(0.4),
+            elevation: 0,
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: ListTile(
+              title: Text(item['title']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontFamily: 'Poppins')),
+              subtitle: Text(item['subtitle']!, style: const TextStyle(color: Colors.white70, fontFamily: 'Poppins')),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white70),
+              onTap: () {},
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _PopularPlaceCard extends StatelessWidget {
-  const _PopularPlaceCard({required this.place});
-
   final Place place;
+  const _PopularPlaceCard({required this.place});
 
   @override
   Widget build(BuildContext context) {
-    // Watch for changes in the favorites provider
-    final favoritesProvider = context.watch<FavoritesProvider>();
-    final isFavorited = favoritesProvider.isFavorite(place);
+    final favorites = context.watch<FavoritesProvider>();
+    final isFav = favorites.isFavorite(place);
 
     return Padding(
       padding: const EdgeInsets.only(right: 12),
       child: GestureDetector(
-        onTap: () {
-          // TODO: Navigate to a detail page for the place
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${place.name} selected')),
-          );
-        },
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PlaceDetailPage(place: place))),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(14),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(
-                place.imagePath,
-                fit: BoxFit.cover,
-              ),
-              // Gradient overlay for text readability
+              Image.asset(place.imagePath, fit: BoxFit.cover),
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -711,32 +680,22 @@ class _PopularPlaceCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Place name
               Positioned(
-                left: 12,
-                bottom: 12,
-                right: 12,
+                bottom: 10,
+                left: 10,
                 child: Text(
                   place.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Poppins'),
                 ),
               ),
-              // Favorite button
               Positioned(
                 top: 8,
                 right: 8,
                 child: CircleAvatar(
-                  backgroundColor: Colors.black.withOpacity(0.5),
+                  backgroundColor: Colors.black45,
                   child: IconButton(
-                    icon: Icon(
-                      isFavorited ? Icons.favorite : Icons.favorite_border,
-                      color: isFavorited ? Colors.red : Colors.white,
-                    ),
-                    onPressed: () => favoritesProvider.toggleFavorite(place),
+                    icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? Colors.redAccent : Colors.white),
+                    onPressed: () => favorites.toggleFavorite(place),
                   ),
                 ),
               ),

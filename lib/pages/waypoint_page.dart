@@ -1,6 +1,7 @@
 // lib/pages/waypoint_page.dart
 import 'package:flutter/material.dart';
 import 'base_page.dart';
+import '../detailpage/waypoint_detail_page.dart';
 
 // Model for a city waypoint, inheriting from Destination
 class Waypoint extends Destination {
@@ -54,7 +55,7 @@ class WaypointPage extends BasePage {
 
     // Using GridView for a more attractive layout
     return GridView.builder(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(16.0),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2, // 2 columns
         crossAxisSpacing: 10,
@@ -64,63 +65,74 @@ class WaypointPage extends BasePage {
       itemCount: waypoints.length,
       itemBuilder: (context, index) {
         final waypoint = waypoints[index];
-        return Card(
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15.0),
-          ),
-          elevation: 5,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Background image
-              Image.asset(
-                waypoint.imageUrl,
-                fit: BoxFit.cover,
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WaypointDetailPage(waypoint: waypoint),
               ),
-              // Gradient to make the text more readable
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.transparent, Colors.black54],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+            );
+          },
+          child: Card(
+            color: const Color(0xFF4A148C).withOpacity(0.3),
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            elevation: 0,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Background image
+                Image.asset(
+                  waypoint.imageUrl,
+                  fit: BoxFit.cover,
+                ),
+                // Gradient to make the text more readable
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.transparent, Colors.black54],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
                 ),
-              ),
-              // City name and description
-              Positioned(
-                bottom: 16,
-                left: 16,
-                right: 16,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      waypoint.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        shadows: [Shadow(blurRadius: 6, color: Colors.black87)],
+                // City name and description
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        waypoint.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          shadows: [Shadow(blurRadius: 6, color: Colors.black87)],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      waypoint.description,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        shadows: [Shadow(blurRadius: 4, color: Colors.black54)],
+                      const SizedBox(height: 4),
+                      Text(
+                        waypoint.description,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          shadows: [Shadow(blurRadius: 4, color: Colors.black54)],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

@@ -5,16 +5,10 @@ import 'package:flutter/services.dart';
 //   url_launcher: ^6.1.14
 import 'package:url_launcher/url_launcher.dart';
 import '../copyright_footer.dart';
+import 'base_page.dart';
 
-class HelpAndEmergencyPage extends StatefulWidget {
+class HelpAndEmergencyPage extends BasePage {
   const HelpAndEmergencyPage({super.key});
-
-  @override
-  State<HelpAndEmergencyPage> createState() => _HelpAndEmergencyPageState();
-}
-
-class _HelpAndEmergencyPageState extends State<HelpAndEmergencyPage> {
-  bool _animateBanner = false;
 
   // Data for phrases, categorized for better organization
   final Map<String, List<Map<String, String>>> _phraseCategories = const {
@@ -63,55 +57,13 @@ class _HelpAndEmergencyPageState extends State<HelpAndEmergencyPage> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    // jalankan animasi setelah build
-    Future.delayed(const Duration(milliseconds: 150), () {
-      if (mounted) {
-        setState(() {
-          _animateBanner = true;
-        });
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      body: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeInOutCubic,
-            height: _animateBanner ? 110 : 0,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.orange.shade400, Colors.deepOrange.shade600],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            padding: const EdgeInsets.only(top: 40),
-            child: const Center(
-              child: Text(
-                "Help & Emergency",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView(
+  Widget buildContent(BuildContext context) {
+    return ListView(
               padding: const EdgeInsets.all(16.0),
               children: [
                 _buildAnimatedItem(
                   delay: 100,
-                  child: _buildSectionTitle(context, 'Emergency Contacts', Icons.contact_emergency_outlined),
+                  child: _buildSectionTitle(context, 'Emergency Contacts', Icons.contact_emergency_rounded),
                 ),
                 _buildAnimatedItem(
                   delay: 200,
@@ -119,8 +71,8 @@ class _HelpAndEmergencyPageState extends State<HelpAndEmergencyPage> {
                     context: context,
                     title: 'Police',
                     number: '110',
-                    icon: Icons.local_police_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFF2962FF), Color(0xFF64B5F6)]),
+                    icon: Icons.local_police_rounded,
+                    gradient: const LinearGradient(colors: [Color(0xFF1A237E), Color(0xFF303F9F)]),
                   ),
                 ),
                 _buildAnimatedItem(
@@ -129,8 +81,8 @@ class _HelpAndEmergencyPageState extends State<HelpAndEmergencyPage> {
                     context: context,
                     title: 'Ambulance / Fire',
                     number: '119',
-                    icon: Icons.local_fire_department_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFFD50000), Color(0xFFFF9E80)]),
+                    icon: Icons.local_fire_department_rounded,
+                    gradient: const LinearGradient(colors: [Color(0xFFB71C1C), Color(0xFFF44336)]),
                   ),
                 ),
                 _buildAnimatedItem(
@@ -139,21 +91,21 @@ class _HelpAndEmergencyPageState extends State<HelpAndEmergencyPage> {
                     context: context,
                     title: 'Your Embassy',
                     number: '(+81) XX-XXXX-XXXX',
-                    icon: Icons.flag_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFF6200EA), Color(0xFFB388FF)]),
+                    icon: Icons.flag_rounded,
+                    gradient: const LinearGradient(colors: [Color(0xFF4A148C), Color(0xFF8E24AA)]),
                     isPlaceholder: true,
                   ),
                 ),
                 const SizedBox(height: 24),
                 _buildAnimatedItem(
                   delay: 500,
-                  child: _buildSectionTitle(context, 'Useful Phrases', Icons.translate_outlined),
+                  child: _buildSectionTitle(context, 'Useful Phrases', Icons.translate_rounded),
                 ),
                 ..._buildPhraseSection(),
                 const SizedBox(height: 24),
                 _buildAnimatedItem(
                   delay: 600,
-                  child: _buildSectionTitle(context, 'Basic First Aid', Icons.medical_services_outlined),
+                  child: _buildSectionTitle(context, 'Basic First Aid', Icons.medical_services_rounded),
                 ),
                 ..._buildFirstAidSection(),
                 _buildAnimatedItem(
@@ -161,11 +113,7 @@ class _HelpAndEmergencyPageState extends State<HelpAndEmergencyPage> {
                   child: const CopyrightFooter(),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
+            );
   }
 
   Widget _buildAnimatedItem({required Widget child, required int delay}) {
@@ -190,12 +138,12 @@ class _HelpAndEmergencyPageState extends State<HelpAndEmergencyPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0, top: 8.0),
       child: Row(
-        children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
+        children: [ 
+          Icon(icon, color: Colors.white, size: 28),
           const SizedBox(width: 12),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Poppins'),
           ),
         ],
       ),
@@ -263,12 +211,13 @@ class _HelpAndEmergencyPageState extends State<HelpAndEmergencyPage> {
       return _buildAnimatedItem(
         delay: delay,
         child: Card(
-          elevation: 2,
+          elevation: 0,
+          color: const Color(0xFF4A148C).withOpacity(0.3),
           margin: const EdgeInsets.symmetric(vertical: 6),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: ExpansionTile(
-            leading: const Icon(Icons.forum_outlined),
-            title: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600)),
+            leading: const Icon(Icons.forum_outlined, color: Colors.white70),
+            title: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
             children: entry.value.map((phrase) {
               return _buildPhraseCard(phrase['en']!, phrase['jp']!);
             }).toList(),
@@ -282,10 +231,10 @@ class _HelpAndEmergencyPageState extends State<HelpAndEmergencyPage> {
     return Builder(builder: (context) {
       return ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 4),
-        title: Text(english),
-        subtitle: Text(japanese, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500)),
+        title: Text(english, style: const TextStyle(color: Colors.white)),
+        subtitle: Text(japanese, style: const TextStyle(color: Colors.lightBlueAccent, fontWeight: FontWeight.w500)),
         trailing: IconButton(
-          icon: const Icon(Icons.copy_outlined, size: 20),
+          icon: const Icon(Icons.copy_outlined, size: 20, color: Colors.white70),
           tooltip: 'Copy Japanese phrase',
           onPressed: () {
             Clipboard.setData(ClipboardData(text: japanese.split(' (')[0]));
@@ -308,17 +257,18 @@ class _HelpAndEmergencyPageState extends State<HelpAndEmergencyPage> {
       return _buildAnimatedItem(
         delay: delay,
         child: Card(
-          elevation: 2,
+          elevation: 0,
+          color: const Color(0xFF4A148C).withOpacity(0.3),
           margin: const EdgeInsets.symmetric(vertical: 6),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: ExpansionTile(
             leading: Icon(tip['icon'], color: tip['color'] as Color),
-            title: Text(tip['title'] as String, style: const TextStyle(fontWeight: FontWeight.w600)),
+            title: Text(tip['title'] as String, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
             children: (tip['steps'] as List<String>).map<Widget>((step) {
               return ListTile(
                 contentPadding: const EdgeInsets.fromLTRB(32, 0, 16, 8),
-                leading: const Icon(Icons.arrow_right, color: Colors.grey),
-                title: Text(step, style: const TextStyle(fontSize: 14)),
+                leading: const Icon(Icons.arrow_right, color: Colors.white54),
+                title: Text(step, style: const TextStyle(fontSize: 14, color: Colors.white70)),
               );
             }).toList(),
           ),

@@ -44,45 +44,47 @@ class _BasePageState extends State<BasePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      body: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeInOutCubic,
-            height: _animateBanner ? 110 : 0,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.orange.shade400, Colors.deepOrange.shade600],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            padding: const EdgeInsets.only(top: 40),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned(left: 4, child: BackButton(color: Colors.white)),
-                Text(
-                  widget.runtimeType.toString().replaceAll('Page', ''),
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1A237E), Color(0xFF4A148C)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOutCubic,
+              height: _animateBanner ? 110 : 0,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.transparent, // Use transparent to show the main gradient
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
                 ),
-              ],
+              ),
+              padding: const EdgeInsets.only(top: 40),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Positioned(left: 4, child: BackButton(color: Colors.white)),
+                  Text(
+                    widget.runtimeType.toString().replaceAll('Page', ''),
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+            Expanded(
               child: widget.buildContent(context),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

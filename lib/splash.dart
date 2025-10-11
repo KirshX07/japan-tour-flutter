@@ -52,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen>
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.orange, Colors.redAccent, Colors.yellow],
+            colors: [Color(0xFF1A237E), Color(0xFF4A148C)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -101,11 +101,19 @@ class _SplashScreenState extends State<SplashScreen>
             FadeTransition(
               opacity: _fadeAnimation,
               child: const Text(
-                "© KiranaShofa 😎 ✨",
+                "© 2025 Kirana Shofa",
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   color: Colors.white70,
                 ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            // Loading indicator
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ),
           ],

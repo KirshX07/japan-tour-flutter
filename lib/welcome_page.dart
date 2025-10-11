@@ -39,7 +39,7 @@ class _WelcomePageState extends State<WelcomePage>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.orange, Colors.red, Colors.yellow],
+            colors: [Color(0xFF26A69A), Color(0xFF4DB6AC)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -72,7 +72,7 @@ class _WelcomePageState extends State<WelcomePage>
                 const SizedBox(height: 30),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: Colors.teal.shade700,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
@@ -83,7 +83,7 @@ class _WelcomePageState extends State<WelcomePage>
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => HomePage(), // ini harus ada class-nya
+                        builder: (context) => const HomePage(username: "Guest"),
                       ),
                     );
                   },

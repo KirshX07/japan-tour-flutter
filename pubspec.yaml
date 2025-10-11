@@ -37,6 +37,8 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.2.3
   intl: ^0.20.2
+  google_fonts: ^6.1.0
+  device_info_plus: ^12.1.0
 
 
 dev_dependencies:
@@ -58,9 +60,11 @@ flutter:
   uses-material-design: true
 
   fonts:
-    - family: Roboto
+    - family: Poppins
       fonts:
-        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
 
   assets:
     # Include root assets directory

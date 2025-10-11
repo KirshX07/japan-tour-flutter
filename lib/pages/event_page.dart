@@ -4,183 +4,208 @@ import 'package:flutter_app/models/place_model.dart';
 import 'package:flutter_app/providers/favorites_provider.dart';
 import 'package:flutter_app/models/planner_item_model.dart';
 import 'package:flutter_app/providers/planner_provider.dart';
-import 'base_page.dart';
+import 'package:flutter_app/pages/base_page.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import '../detailpage/event_detail_page.dart';
+import '../widgets/shared_widgets.dart';
 
-// Inheritance: Event extends Destination
 class Event extends Destination {
-  final String _date;
-  final double price;
-  final double rating;
+  final DateTime date;
+  final String location;
+  final String category;
+  final String? funFact;
+  final double? rating;
 
   Event({
     required String id,
     required String name,
     required String description,
     required String imageUrl,
-    required String date,
-    required this.price,
-    required this.rating,
-  })  : _date = date,
-        super(id, name, description, imageUrl);
-
-  String get date => _date;
+    required this.date,
+    required this.location,
+    required this.category,
+    this.funFact,
+    this.rating,
+  }) : super(id, name, description, imageUrl);
 }
 
-// Polymorphism: EventPage extends BasePage and overrides buildContent
 class EventPage extends BasePage {
   const EventPage({super.key});
 
   @override
+  String get pageTitle => 'Events in Japan';
+
+  @override
   Widget buildContent(BuildContext context) {
-    final List<Event> events = [
+    final events = [
       Event(
-        id: 'e4',
+        id: 'e1',
         name: 'Gion Matsuri',
-        description: 'Famous festival of Yasaka Shrine in Kyoto.',
+        description: 'One of Japan\'s most famous festivals, held in Kyoto.',
         imageUrl: 'assets/events/matsuri.png',
-        date: 'July',
-        price: 0, // Free event
+        date: DateTime(DateTime.now().year, 7, 1),
+        location: 'Kyoto',
+        category: 'Festival',
+        funFact: 'Started in the 9th century as a religious ceremony.',
         rating: 4.8,
       ),
       Event(
         id: 'e2',
-        name: 'Kyoto Autumn Illumination',
-        description: 'See the temples beautifully lit up.',
-        imageUrl: 'assets/events/autumn_kyoto.png',
-        date: 'Mid-Nov to Early-Dec',
-        price: 600,
+        name: 'Sapporo Snow Festival',
+        description: 'A winter wonderland with massive snow and ice sculptures.',
+        imageUrl: 'assets/seasons/winter.png',
+        date: DateTime(DateTime.now().year + 1, 2, 4),
+        location: 'Sapporo, Hokkaido',
+        category: 'Seasonal',
+        funFact: 'Started in 1950 by students; now attracts millions.',
         rating: 4.9,
       ),
       Event(
         id: 'e3',
-        name: 'Sapporo Snow Festival',
-        description: 'A winter wonderland of ice and snow sculptures.',
-        imageUrl: 'assets/events/sapporo_snow.png',
-        date: 'February',
-        price: 0, // Free to view
-        rating: 4.7,
+        name: 'AnimeJapan',
+        description: 'The largest anime convention in Japan, held in Tokyo.',
+        imageUrl: 'assets/events/concert.png',
+        date: DateTime(DateTime.now().year + 1, 3, 23),
+        location: 'Tokyo Big Sight',
+        category: 'Convention',
+        funFact: 'Major anime event for new releases & merchandise.',
+        rating: 4.6,
       ),
     ];
 
-    return ListView.builder(
-      itemCount: events.length,
-      itemBuilder: (context, index) {
-        final event = events[index];
-        final place = Place(
-          id: event.id,
-          name: event.name,
-          description: event.description,
-          imagePath: event.imageUrl,
+    Future<void> showDatePickerLocal(BuildContext context, Place place) async {
+      final pickedDate = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime.now(),
+        lastDate: DateTime.now().add(const Duration(days: 365)),
+      );
+      if (pickedDate != null && context.mounted) {
+        context.read<PlannerProvider>().addItem(PlannerItem(place: place, date: pickedDate));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${place.name} added to planner!')),
         );
+      }
+    }
 
-        return Card(
-          clipBehavior: Clip.antiAlias,
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    Widget buildActionBarLocal(BuildContext context, Place place) {
+      return Consumer<FavoritesProvider>(
+        builder: (context, favoritesProvider, child) {
+          final isFav = favoritesProvider.isFavorite(place);
+          return Row(
             children: [
-              Image.asset(
-                event.imageUrl,
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
+              IconButton(
+                icon: const Icon(Icons.calendar_today_outlined, color: Colors.white70, size: 22),
+                onPressed: () => showDatePickerLocal(context, place),
               ),
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(event.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text(event.description, style: TextStyle(color: Colors.grey.shade600)),
-                    const SizedBox(height: 12),
-                    _buildInfoRow(Icons.calendar_today, 'Date: ${event.date}'),
-                    const SizedBox(height: 6),
-                    _buildInfoRow(Icons.attach_money, event.price > 0 ? 'Ticket: ¥${event.price.toStringAsFixed(0)}' : 'Free Event'),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        _buildRatingStars(event.rating),
-                        const SizedBox(width: 8),
-                        Text(event.rating.toString(), style: TextStyle(color: Colors.grey.shade700)),
-                      ],
-                    ),
-                  ],
-                ),
+              IconButton(
+                icon: Icon(isFav ? Icons.favorite : Icons.favorite_border,
+                    color: isFav ? Colors.redAccent : Colors.white70, size: 22),
+                onPressed: () => favoritesProvider.toggleFavorite(place),
               ),
-              const Divider(height: 1),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: Consumer<FavoritesProvider>(
-                  builder: (context, favoritesProvider, child) {
-                    final isFavorited = favoritesProvider.isFavorite(place);
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        IconButton(icon: const Icon(Icons.calendar_today_outlined, color: Colors.blueGrey), tooltip: 'Add to planner', onPressed: () => _showDatePicker(context, place)),
-                        IconButton(icon: Icon(isFavorited ? Icons.favorite : Icons.favorite_border, color: isFavorited ? Colors.red : Colors.grey), tooltip: 'Add to favorites', onPressed: () => favoritesProvider.toggleFavorite(place)),
-                      ],
-                    );
-                  },
-                ),
-              )
             ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _showDatePicker(BuildContext context, Place place) async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-
-    if (pickedDate != null && context.mounted) {
-      final plannerProvider = context.read<PlannerProvider>();
-      final newItem = PlannerItem(place: place, date: pickedDate);
-      plannerProvider.addItem(newItem);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${place.name} added to your planner!'),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
-        ),
+          );
+        },
       );
     }
-  }
 
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: Colors.grey.shade700),
-        const SizedBox(width: 8),
-        Text(text, style: TextStyle(fontSize: 14, color: Colors.grey.shade800)),
-      ],
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF311B92), Color(0xFF512DA8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: ListView.builder(
+        itemCount: events.length,
+        padding: const EdgeInsets.all(12),
+        itemBuilder: (context, index) {
+          final event = events[index];
+          final place = Place(
+            id: event.id,
+            name: event.name,
+            description: event.description,
+            imagePath: event.imageUrl,
+            rating: event.rating,
+          );
+
+          return AnimatedListItem(
+            index: index,
+            child: Card(
+              color: Colors.white.withOpacity(0.1),
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => EventDetailPage(event: event)),
+                    ),
+                    child: Hero(
+                      tag: event.id,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
+                        child: Image.asset(event.imageUrl,
+                            width: 130, height: 150, fit: BoxFit.cover),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(event.name,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16)),
+                          const SizedBox(height: 4),
+                          Text(event.description,
+                              style: const TextStyle(color: Colors.white70, fontSize: 13),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.star, color: Colors.amber, size: 18),
+                              const SizedBox(width: 4),
+                              Text(event.rating?.toStringAsFixed(1) ?? 'N/A',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          InfoRow(
+                              icon: Icons.calendar_today,
+                              text: DateFormat.yMMMMd().format(event.date),
+                              iconColor: Colors.white70,
+                              textColor: Colors.white70),
+                          InfoRow(
+                              icon: Icons.location_on,
+                              text: event.location,
+                              iconColor: Colors.white70,
+                              textColor: Colors.white70),
+                          InfoRow(
+                              icon: Icons.category_outlined,
+                              text: event.category,
+                              iconColor: Colors.white70,
+                              textColor: Colors.white70),
+                          const SizedBox(height: 4),
+                          buildActionBarLocal(context, place),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
-  }
-
-  Widget _buildRatingStars(double rating) {
-    List<Widget> stars = [];
-    int fullStars = rating.floor();
-    bool hasHalfStar = (rating - fullStars) >= 0.5;
-
-    for (int i = 0; i < fullStars; i++) {
-      stars.add(const Icon(Icons.star, color: Colors.amber, size: 20));
-    }
-    if (hasHalfStar) {
-      stars.add(const Icon(Icons.star_half, color: Colors.amber, size: 20));
-    }
-    for (int i = (fullStars + (hasHalfStar ? 1 : 0)); i < 5; i++) {
-      stars.add(const Icon(Icons.star_border, color: Colors.amber, size: 20));
-    }
-    return Row(children: stars);
   }
 }

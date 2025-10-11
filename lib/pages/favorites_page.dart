@@ -2,179 +2,175 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/models/place_model.dart';
 import 'package:flutter_app/providers/favorites_provider.dart';
+import 'package:flutter_app/pages/animated_page_header.dart';
 import '../copyright_footer.dart';
 
-class FavoritesPage extends StatefulWidget {
+class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});
 
   @override
-  State<FavoritesPage> createState() => _FavoritesPageState();
-}
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const AnimatedPageHeader(title: "Favorites"),
+        Expanded(
+          child: Consumer<FavoritesProvider>(
+            builder: (context, favoritesProvider, child) {
+              final favorites = favoritesProvider.favoritePlaces;
 
-class _FavoritesPageState extends State<FavoritesPage> {
-  bool _animateBanner = false;
+              if (favorites.isEmpty) {
+                return _buildEmptyState();
+              }
 
-  @override
-  void initState() {
-    super.initState();
-    // jalankan animasi setelah build
-    Future.delayed(const Duration(milliseconds: 150), () {
-      setState(() {
-        _animateBanner = true;
-      });
-    });
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: favorites.length,
+                itemBuilder: (context, index) {
+                  final place = favorites[index];
+                  return _buildFavoriteItem(context, place, favoritesProvider);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      body: Column(
+  Widget _buildFavoriteItem(
+      BuildContext context, Place place, FavoritesProvider favoritesProvider) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔥 Banner animasi orange
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeInOutCubic,
-            height: _animateBanner ? 110 : 0,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.orange.shade400, Colors.deepOrange.shade600],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
+          // Gambar kiri
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              bottomLeft: Radius.circular(16),
             ),
-            padding: const EdgeInsets.only(top: 40),
-            child: const Center(
-              child: Text(
-                "Your Favorite Places ❤️",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+            child: Image.asset(
+              place.imagePath,
+              width: 120,
+              height: 120,
+              fit: BoxFit.cover,
             ),
           ),
 
-          // isi list
+          // Konten kanan
           Expanded(
-            child: Consumer<FavoritesProvider>(
-              builder: (context, favoritesProvider, child) {
-                if (favoritesProvider.favoritePlaces.isEmpty) {
-                  return const Column(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    place.name,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    place.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.black54,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
                     children: [
-                      Expanded(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.favorite_border,
-                                  size: 100, color: Colors.grey),
-                              SizedBox(height: 20),
-                              Text(
-                                'No favorites yet!',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Tap the ❤️ icon on a place to save it here.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 16, color: Colors.grey),
-                              ),
-                            ],
-                          ),
+                      const Icon(Icons.star, color: Colors.amber, size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        place.rating.toString(),
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      CopyrightFooter(),
                     ],
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: favoritesProvider.favoritePlaces.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == favoritesProvider.favoritePlaces.length) {
-                      return const CopyrightFooter();
-                    }
-                    final Place place = favoritesProvider.favoritePlaces[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.event, color: Colors.blueAccent),
+                        tooltip: 'Add to calendar',
+                        onPressed: () {},
                       ),
-                      child: Row(
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.horizontal(
-                                left: Radius.circular(16)),
-                            child: Image.asset(
-                              place.imagePath,
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
+                      IconButton(
+                        icon: const Icon(Icons.favorite, color: Colors.redAccent),
+                        tooltip: 'Remove from favorites',
+                        onPressed: () {
+                          favoritesProvider.toggleFavorite(place);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${place.name} removed from favorites'),
+                              duration: const Duration(seconds: 1),
+                              backgroundColor: Colors.deepPurple,
                             ),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    place.name,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    place.description,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.favorite, color: Colors.red),
-                            onPressed: () =>
-                                favoritesProvider.toggleFavorite(place),
-                          ),
-                        ],
+                          );
+                        },
                       ),
-                    );
-                  },
-                );
-              },
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.favorite_outline,
+              size: 100,
+              color: Colors.white.withOpacity(0.5),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              "No Favorites Yet!",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Tap the ❤️ icon on any place to save it here.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                fontFamily: 'Poppins',
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ),
+            const SizedBox(height: 50),
+            const CopyrightFooter(),
+          ],
+        ),
       ),
     );
   }

@@ -36,8 +36,8 @@ class _AnimatedPageHeaderState extends State<AnimatedPageHeader> {
       height: _animateBanner ? 110 : 0,
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.orange.shade400, Colors.deepOrange.shade600],
+        gradient: const LinearGradient(
+          colors: [Colors.white24, Colors.white10],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
