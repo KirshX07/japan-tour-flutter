@@ -83,12 +83,12 @@ class _HomePageState extends State<HomePage> {
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: FloatingActionButton(
-          onPressed: () => _onNavItemTapped(3),
+          onPressed: () => _onNavItemTapped(2), // Arahkan ke Profile (index 2)
           backgroundColor: Colors.deepPurpleAccent,
           foregroundColor: Colors.white,
           elevation: 4.0,
           shape: const CircleBorder(),
-          child: const Icon(Icons.event_note_outlined),
+          child: const Icon(Icons.person), // Ganti ikon menjadi Profile
         ),
         bottomNavigationBar: _buildBottomBar(),
       ),
@@ -118,7 +118,7 @@ class _HomePageState extends State<HomePage> {
             _buildNavItem(Icons.home_outlined, Icons.home, 0, "Home"),
             _buildNavItem(Icons.favorite_border, Icons.favorite, 1, "Favorites"),
             const SizedBox(width: 48),
-            _buildNavItem(Icons.person_outline, Icons.person, 2, "Profile"),
+            _buildNavItem(Icons.event_note_outlined, Icons.event_note, 3, "Planner"),
             _buildNavItem(Icons.help_outline, Icons.help, 4, "Help"),
           ],
         ),
