@@ -18,6 +18,9 @@ class WaypointPage extends BasePage {
   const WaypointPage({super.key});
 
   @override
+  String get pageTitle => 'Waypoints';
+
+  @override
   Widget buildContent(BuildContext context) {
     // List of major cities in Japan
     final waypoints = [

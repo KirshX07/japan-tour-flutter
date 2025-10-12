@@ -10,6 +10,9 @@ import 'base_page.dart';
 class HelpAndEmergencyPage extends BasePage {
   const HelpAndEmergencyPage({super.key});
 
+  @override
+  String get pageTitle => 'Help & Emergency';
+
   // Data for phrases, categorized for better organization
   final Map<String, List<Map<String, String>>> _phraseCategories = const {
     'General & Emergency': [

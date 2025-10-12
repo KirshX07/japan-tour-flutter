@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/widgets/page_header.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String username;
@@ -30,11 +31,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: const Text("Edit Profile"),
-        ),
+        appBar: const PageHeader(title: "Edit Profile"),
         body: Padding(
           padding: const EdgeInsets.all(20),
           child: ListView(

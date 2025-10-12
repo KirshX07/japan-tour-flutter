@@ -33,6 +33,9 @@ class ExperiencePage extends BasePage {
   const ExperiencePage({super.key});
 
   @override
+  String get pageTitle => 'Experiences';
+
+  @override
   Widget buildContent(BuildContext context) {
     final experiences = [
       Experience(

@@ -33,6 +33,9 @@ class FoodDrinkPage extends BasePage {
   const FoodDrinkPage({super.key});
 
   @override
+  String get pageTitle => 'Food & Drink';
+
+  @override
   Widget buildContent(BuildContext context) {
     Future<void> showDatePickerLocal(BuildContext context, Place place) async {
       final DateTime? pickedDate = await showDatePicker(

@@ -35,6 +35,9 @@ class TransportPage extends BasePage {
   const TransportPage({super.key});
 
   @override
+  String get pageTitle => 'Transport';
+
+  @override
   Widget buildContent(BuildContext context) {
     Future<void> showDatePickerLocal(BuildContext context, Place place) async {
       final DateTime? pickedDate = await showDatePicker(

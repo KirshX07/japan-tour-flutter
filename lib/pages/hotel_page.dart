@@ -38,6 +38,9 @@ class HotelPage extends BasePage {
   const HotelPage({super.key});
 
   @override
+  String get pageTitle => 'Hotels';
+
+  @override
   Widget buildContent(BuildContext context) {
     Future<void> showDatePickerLocal(BuildContext context, Place place) async {
       final DateTime? pickedDate = await showDatePicker(

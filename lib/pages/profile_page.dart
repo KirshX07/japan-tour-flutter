@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../login_page.dart';
 import '../copyright_footer.dart';
-import 'package:flutter_app/pages/animated_page_header.dart';
+import 'package:flutter_app/widgets/page_header.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import '../widgets/shared_widgets.dart';
 import 'edit_profile_page.dart';
@@ -26,7 +26,7 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const AnimatedPageHeader(title: "Profile"),
+        const PageHeader(title: "Profile", showBack: false),
         Expanded(
           child: ListView(
             padding:

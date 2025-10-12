@@ -33,6 +33,9 @@ class ShopPage extends BasePage {
   const ShopPage({super.key});
 
   @override
+  String get pageTitle => 'Shopping';
+
+  @override
   Widget buildContent(BuildContext context) {
     // Fungsi tambah planner
     Future<void> showDatePickerLocal(BuildContext context, Place place) async {

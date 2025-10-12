@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/models/place_model.dart';
 import 'package:flutter_app/providers/favorites_provider.dart';
-import 'package:flutter_app/pages/animated_page_header.dart';
 import '../copyright_footer.dart';
+import '../widgets/page_header.dart';
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});
@@ -12,7 +12,7 @@ class FavoritesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const AnimatedPageHeader(title: "Favorites"),
+        const PageHeader(title: "Favorites", showBack: false),
         Expanded(
           child: Consumer<FavoritesProvider>(
             builder: (context, favoritesProvider, child) {

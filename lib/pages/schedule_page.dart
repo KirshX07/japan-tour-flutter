@@ -4,8 +4,8 @@ import 'package:flutter_app/models/planner_item_model.dart';
 import 'package:flutter_app/providers/planner_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // Pastikan sudah ditambahkan di pubspec.yaml
-import 'package:flutter_app/pages/animated_page_header.dart';
 import '../copyright_footer.dart';
+import '../widgets/page_header.dart';
 
 class SchedulePage extends StatelessWidget {
   const SchedulePage({super.key});
@@ -14,7 +14,7 @@ class SchedulePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const AnimatedPageHeader(title: "Planner"),
+        const PageHeader(title: "Planner", showBack: false),
         Expanded(
           child: SafeArea(
             top: false,
