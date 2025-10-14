@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // Pastikan sudah ditambahkan di pubspec.yaml
 import '../copyright_footer.dart';
 import '../widgets/page_header.dart';
+import '../widgets/shared_widgets.dart';
 
 class SchedulePage extends StatelessWidget {
   const SchedulePage({super.key});
@@ -53,8 +54,11 @@ class SchedulePage extends StatelessWidget {
                                 ),
                           ),
                         ),
-                        ...items.map((item) => _buildPlannerItemCard(
-                            context, item, plannerProvider)),
+                        ...items.asMap().entries.map((entry) {
+                          return AnimatedListItem(
+                              index: entry.key,
+                              child: _buildPlannerItemCard(context, entry.value, plannerProvider));
+                        }),
                       ],
                     );
                   },

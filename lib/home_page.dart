@@ -18,6 +18,7 @@ import 'package:flutter_app/pages/transport_page.dart';
 import 'package:flutter_app/pages/waypoint_page.dart';
 import 'package:flutter_app/pages/place_detail_page.dart';
 import 'package:flutter_app/widgets/shared_widgets.dart';
+import 'package:flutter_app/widgets/page_transitions.dart';
 import 'package:provider/provider.dart';
 
 
@@ -71,11 +72,27 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: PageView(
+        body: PageView.builder(
           controller: _pageController,
-          children: _pages,
+          itemCount: _pages.length,
+          itemBuilder: (context, index) {
+            final page = _pages[index];
+            final offset = _pageOffset - index;
+
+            // A value that's 1 when the page is active, and goes to 0 when it's one page away.
+            final double visibility = (1 - offset.abs()).clamp(0.0, 1.0);
+
+            // Apply a subtle scale and fade effect to pages that are not in focus.
+            return Opacity(
+              opacity: Curves.easeOut.transform(visibility),
+              child: Transform.scale(
+                scale: 1.0 - (offset.abs() * 0.1),
+                alignment: Alignment.center,
+                child: page,
+              ),
+            );
+          },
           onPageChanged: (index) {
-            // Tetap gunakan ini untuk update final index
             setState(() {
               _currentIndex = index;
             });
@@ -96,82 +113,70 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBottomBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF1A237E), Color(0xFF4A148C)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: 0, offset: Offset(0, -2)),
+    return BottomAppBar(
+      shape: const CircularNotchedRectangle(),
+      color: const Color(0xFF1A237E).withOpacity(0.8),
+      elevation: 10,
+      notchMargin: 8.0,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: <Widget>[
+          _buildNavItem(Icons.home_outlined, Icons.home, 0, "Home"),
+          _buildNavItem(Icons.favorite_border, Icons.favorite, 1, "Favorites"),
+          const SizedBox(width: 48), // The space for the FAB
+          _buildNavItem(Icons.event_note_outlined, Icons.event_note, 3, "Planner"),
+          _buildNavItem(Icons.help_outline, Icons.help, 4, "Help"),
         ],
-      ),
-      child: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        color: Colors.transparent, // Warna dibuat transparan
-        elevation: 0, // Elevation dipindahkan ke Container
-        notchMargin: 8.0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-            _buildNavItem(Icons.home_outlined, Icons.home, 0, "Home"),
-            _buildNavItem(Icons.favorite_border, Icons.favorite, 1, "Favorites"),
-            const SizedBox(width: 48),
-            _buildNavItem(Icons.event_note_outlined, Icons.event_note, 3, "Planner"),
-            _buildNavItem(Icons.help_outline, Icons.help, 4, "Help"),
-          ],
-        ),
       ),
     );
   }
 
   void _onNavItemTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-      _pageController.animateToPage(index,
-          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
-    });
+    if (_currentIndex != index) {
+      setState(() {
+        _currentIndex = index;
+      });
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   Widget _buildNavItem(IconData unselectedIcon, IconData selectedIcon, int index, String label) {
     final isSelected = _currentIndex == index;
-    final color = isSelected ? Colors.white : Colors.white.withOpacity(0.6);
-    final icon = isSelected ? selectedIcon : unselectedIcon;
+    final color = isSelected ? Colors.white : Colors.white.withOpacity(0.7);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          icon: Icon(icon, color: color, size: isSelected ? 28.0 : 24.0),
-          tooltip: label,
-          onPressed: () => _onNavItemTapped(index),
-        ),
-        AnimatedContainer(
-          // Gunakan durasi 0 agar indikator bergerak instan mengikuti scroll
-          duration: const Duration(milliseconds: 0),
-          height: 3,
-          width: _calculateIndicatorWidth(index),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(10),
+    return InkWell(
+      onTap: () => _onNavItemTapped(index),
+      borderRadius: BorderRadius.circular(20),
+      splashColor: Colors.white.withOpacity(0.1),
+      highlightColor: Colors.transparent,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          AnimatedScale(
+            scale: isSelected ? 1.2 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            child: Icon(isSelected ? selectedIcon : unselectedIcon, color: color, size: 24.0),
           ),
-        )
-      ],
+          const SizedBox(height: 4),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            height: 3,
+            width: isSelected ? 20 : 0,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
+      ),
     );
-  }
-
-  double _calculateIndicatorWidth(int index) {
-    // Jarak antara index saat ini dan index target
-    double distance = (_pageOffset - index).abs();
-
-    // Jika jarak kurang dari 1 (artinya kita sedang transisi antar halaman ini)
-    if (distance < 1) {
-      // Lebar akan berkurang seiring menjauhnya dari halaman
-      return 18 * (1 - distance);
-    }
-    // Jika tidak, lebarnya 0
-    return 0;
   }
 }
 
@@ -652,54 +657,80 @@ class _HomeContentState extends State<HomeContent> with TickerProviderStateMixin
   }
 }
 
-class _PopularPlaceCard extends StatelessWidget {
+class _PopularPlaceCard extends StatefulWidget {
   final Place place;
   const _PopularPlaceCard({required this.place});
 
   @override
+  State<_PopularPlaceCard> createState() => _PopularPlaceCardState();
+}
+
+class _PopularPlaceCardState extends State<_PopularPlaceCard> {
+  bool _isTapped = false;
+
+  @override
   Widget build(BuildContext context) {
     final favorites = context.watch<FavoritesProvider>();
-    final isFav = favorites.isFavorite(place);
+    final isFav = favorites.isFavorite(widget.place);
 
     return Padding(
       padding: const EdgeInsets.only(right: 12),
       child: GestureDetector(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PlaceDetailPage(place: place))),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(place.imagePath, fit: BoxFit.cover),
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black54],
+        onTapDown: (_) => setState(() => _isTapped = true),
+        onTapCancel: () => setState(() => _isTapped = false),
+        onTapUp: (_) {
+          setState(() => _isTapped = false);
+          Navigator.push(
+            context,
+            FadePageRoute(child: PlaceDetailPage(place: widget.place)),
+          );
+        },
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+          scale: _isTapped ? 0.95 : 1.0,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Hero(
+                  tag: widget.place.id,
+                  child: Image.asset(widget.place.imagePath, fit: BoxFit.cover),
+                ),
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.transparent, Colors.black87],
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                bottom: 10,
-                left: 10,
-                child: Text(
-                  place.name,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Poppins'),
-                ),
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: CircleAvatar(
-                  backgroundColor: Colors.black45,
-                  child: IconButton(
-                    icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? Colors.redAccent : Colors.white),
-                    onPressed: () => favorites.toggleFavorite(place),
+                Positioned(
+                  bottom: 10,
+                  left: 10,
+                  right: 10,
+                  child: Text(
+                    widget.place.name,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Poppins'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-            ],
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: CircleAvatar(
+                    backgroundColor: Colors.black45,
+                    child: IconButton(
+                      icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? Colors.redAccent : Colors.white),
+                      onPressed: () => favorites.toggleFavorite(widget.place),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

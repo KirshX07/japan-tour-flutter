@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:flutter_app/models/place_model.dart';
 import 'package:flutter_app/providers/favorites_provider.dart';
 import '../copyright_footer.dart';
+import '../widgets/shared_widgets.dart';
 import '../widgets/page_header.dart';
+import 'package:getwidget/getwidget.dart';
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});
@@ -16,6 +18,10 @@ class FavoritesPage extends StatelessWidget {
         Expanded(
           child: Consumer<FavoritesProvider>(
             builder: (context, favoritesProvider, child) {
+              if (favoritesProvider.isLoading) {
+                return _buildShimmerList();
+              }
+
               final favorites = favoritesProvider.favoritePlaces;
 
               if (favorites.isEmpty) {
@@ -27,7 +33,10 @@ class FavoritesPage extends StatelessWidget {
                 itemCount: favorites.length,
                 itemBuilder: (context, index) {
                   final place = favorites[index];
-                  return _buildFavoriteItem(context, place, favoritesProvider);
+                  return AnimatedListItem(
+                    index: index,
+                    child: _buildFavoriteItem(context, place, favoritesProvider),
+                  );
                 },
               );
             },
@@ -131,6 +140,43 @@ class FavoritesPage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerList() {
+    return GFShimmer(
+      mainColor: Colors.white.withOpacity(0.08),
+      secondaryColor: Colors.white.withOpacity(0.15),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 5,
+        itemBuilder: (context, index) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      bottomLeft: Radius.circular(16),
+                    ),
+                  ),
+                ),
+                const Expanded(child: SizedBox()),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

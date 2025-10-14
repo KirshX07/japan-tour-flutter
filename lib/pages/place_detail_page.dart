@@ -24,11 +24,14 @@ class PlaceDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset(
-              place.imagePath,
-              height: 250,
-              width: double.infinity,
-              fit: BoxFit.cover,
+            Hero(
+              tag: place.id,
+              child: Image.asset(
+                place.imagePath,
+                height: 250,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),

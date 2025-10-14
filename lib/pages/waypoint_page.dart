@@ -1,5 +1,6 @@
 // lib/pages/waypoint_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_app/widgets/page_transitions.dart';
 import 'base_page.dart';
 import '../detailpage/waypoint_detail_page.dart';
 
@@ -68,77 +69,90 @@ class WaypointPage extends BasePage {
       itemCount: waypoints.length,
       itemBuilder: (context, index) {
         final waypoint = waypoints[index];
-        return InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => WaypointDetailPage(waypoint: waypoint),
-              ),
-            );
-          },
-          child: Card(
-            color: const Color(0xFF4A148C).withOpacity(0.3),
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            elevation: 0,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // Background image
-                Image.asset(
-                  waypoint.imageUrl,
-                  fit: BoxFit.cover,
-                ),
-                // Gradient to make the text more readable
-                Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.transparent, Colors.black54],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-                // City name and description
-                Positioned(
-                  bottom: 16,
-                  left: 16,
-                  right: 16,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        waypoint.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          shadows: [Shadow(blurRadius: 6, color: Colors.black87)],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        waypoint.description,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          shadows: [Shadow(blurRadius: 4, color: Colors.black54)],
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+        return _WaypointCard(waypoint: waypoint);
+      },
+    );
+  }
+}
+
+class _WaypointCard extends StatefulWidget {
+  const _WaypointCard({required this.waypoint});
+  final Waypoint waypoint;
+
+  @override
+  State<_WaypointCard> createState() => _WaypointCardState();
+}
+
+class _WaypointCardState extends State<_WaypointCard> {
+  bool _isTapped = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isTapped = true),
+      onTapUp: (_) {
+        setState(() => _isTapped = false);
+        Navigator.push(
+          context,
+          FadePageRoute(child: WaypointDetailPage(waypoint: widget.waypoint)),
         );
       },
+      onTapCancel: () => setState(() => _isTapped = false),
+      child: AnimatedScale(
+        scale: _isTapped ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        child: Card(
+          color: const Color(0xFF4A148C).withOpacity(0.3),
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15.0),
+          ),
+          elevation: _isTapped ? 8 : 0,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(widget.waypoint.imageUrl, fit: BoxFit.cover),
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.transparent, Colors.black54],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 16,
+                left: 16,
+                right: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.waypoint.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        shadows: [Shadow(blurRadius: 6, color: Colors.black87)],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.waypoint.description,
+                      style: const TextStyle(color: Colors.white, fontSize: 14, shadows: [Shadow(blurRadius: 4, color: Colors.black54)]),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

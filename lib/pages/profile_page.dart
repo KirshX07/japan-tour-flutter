@@ -3,8 +3,12 @@ import '../login_page.dart';
 import '../copyright_footer.dart';
 import 'package:flutter_app/widgets/page_header.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import '../widgets/page_transitions.dart';
 import '../widgets/shared_widgets.dart';
 import 'edit_profile_page.dart';
+import 'package:getwidget/getwidget.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; // ✅ untuk cek platform
+import 'dart:html' as html; // ✅ hanya aktif di Flutter Web
 
 class ProfilePage extends StatelessWidget {
   final String username;
@@ -29,8 +33,7 @@ class ProfilePage extends StatelessWidget {
         const PageHeader(title: "Profile", showBack: false),
         Expanded(
           child: ListView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             children: <Widget>[
               AnimatedListItem(delay: 100, child: _buildProfileHeader(context)),
               const SizedBox(height: 20),
@@ -67,9 +70,7 @@ class ProfilePage extends StatelessWidget {
           GestureDetector(
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => EditProfilePage(username: username),
-              ),
+              FadePageRoute(child: EditProfilePage(username: username)),
             ),
             child: const Hero(
               tag: 'profile_picture',
@@ -110,17 +111,28 @@ class ProfilePage extends StatelessWidget {
           text: 'Edit Profile',
           onTap: () {
             Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => EditProfilePage(username: username),
-              ),
-            );
+                context, FadePageRoute(child: EditProfilePage(username: username)));
           },
         ),
         _buildMenuCard(
           icon: Icons.settings_outlined,
           text: 'Settings',
           onTap: () {},
+        ),
+        _buildMenuCard(
+          icon: Icons.info_outline,
+          text: 'Show Popup',
+          onTap: () {
+            GFToast.showToast(
+              'This is a popup from GetWidget!',
+              context,
+              toastPosition: GFToastPosition.BOTTOM,
+              backgroundColor: Colors.deepPurpleAccent,
+              textStyle: const TextStyle(fontSize: 16, color: Colors.white, fontFamily: 'Poppins'),
+              trailing: const Icon(Icons.notifications, color: Colors.white),
+              toastDuration: 3, // Durasi dalam detik
+            );
+          },
         ),
         _buildMenuCard(
           icon: Icons.notifications_outlined,
@@ -180,8 +192,7 @@ class ProfilePage extends StatelessWidget {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2C1D57),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           title: const Text('Logout', style: TextStyle(color: Colors.white)),
           content: const Text(
             'Are you sure you want to logout?',
@@ -190,8 +201,7 @@ class ProfilePage extends StatelessWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child:
-                  const Text('Cancel', style: TextStyle(color: Colors.white70)),
+              child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
             ),
             TextButton(
               child: const Text('Logout', style: TextStyle(color: Colors.red)),
@@ -210,54 +220,39 @@ class ProfilePage extends StatelessWidget {
   }
 
   Future<void> _showDeviceInfoDialog(BuildContext context) async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    String infoText = '';
+
+    if (kIsWeb) {
+      // ✅ Kalau di web (GitHub Pages)
+      final userAgent = html.window.navigator.userAgent;
+      final platform = html.window.navigator.platform;
+      infoText = 'Platform: $platform\nUser Agent:\n$userAgent';
+    } else {
+      // ✅ Kalau di Android/iOS pakai device_info_plus
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+
+      infoText =
+          'Model: ${androidInfo.model}\nBrand: ${androidInfo.brand}\nAndroid Version: ${androidInfo.version.release}\nSDK: ${androidInfo.version.sdkInt}';
+    }
 
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.6),
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF2C1D57),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         title: const Text('Device Information',
             style: TextStyle(color: Colors.white)),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildInfoRow('Model', androidInfo.model),
-              _buildInfoRow('Brand', androidInfo.brand),
-              _buildInfoRow('Android Version', androidInfo.version.release),
-              _buildInfoRow('SDK', '${androidInfo.version.sdkInt}'),
-            ]
-                .map((widget) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: widget))
-                .toList(),
-          ),
+        content: Text(
+          infoText,
+          style: const TextStyle(color: Colors.white70, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Close', style: TextStyle(color: Colors.white70)),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Text.rich(
-      TextSpan(
-        style: const TextStyle(color: Colors.white70, fontSize: 14),
-        children: [
-          TextSpan(
-            text: '$label: ',
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          TextSpan(text: value),
         ],
       ),
     );

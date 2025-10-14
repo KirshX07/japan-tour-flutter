@@ -142,6 +142,30 @@ class TransportPage extends BasePage {
         funFact:
             'Overnight buses help travelers save on both transport and accommodation.',
       ),
+      Transport(
+        id: 't6',
+        name: 'All Nippon Airways (ANA)',
+        description: 'Major airline for domestic and international flights.',
+        imageUrl: 'assets/transport/ana.png', // Placeholder image
+        cost: 20000.0,
+        rating: 4.8,
+        funFact:
+            'ANA is a member of the Star Alliance and is known for its excellent service.',
+        bestTimeToVisit:
+            'Popular routes: Tokyo (Haneda) → Sapporo, Fukuoka, Okinawa.',
+      ),
+      Transport(
+        id: 't7',
+        name: 'Japan Airlines (JAL)',
+        description: 'Japan\'s flag carrier, offering extensive domestic routes.',
+        imageUrl: 'assets/transport/jal.png', // Placeholder image
+        cost: 19000.0,
+        rating: 4.7,
+        funFact:
+            'JAL is part of the Oneworld alliance and was once a government-owned airline.',
+        bestTimeToVisit:
+            'Popular routes: Tokyo → Osaka, Hiroshima, Kagoshima.',
+      ),
     ];
 
     return ListView.builder(

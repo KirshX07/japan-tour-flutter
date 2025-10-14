@@ -6,6 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FavoritesProvider with ChangeNotifier {
   List<Place> _favoritePlaces = [];
   static const _favoritesKey = 'favorite_places';
+  bool _isLoading = true;
+
+  bool get isLoading => _isLoading;
 
   FavoritesProvider() {
     // Muat favorit dari penyimpanan saat provider pertama kali dibuat.
@@ -41,12 +44,15 @@ class FavoritesProvider with ChangeNotifier {
 
   /// Memuat daftar favorit dari SharedPreferences.
   Future<void> _loadFavorites() async {
+    _isLoading = true;
+    notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     final List<String>? favoritesJson = prefs.getStringList(_favoritesKey);
     if (favoritesJson != null) {
       // Ubah daftar String JSON kembali menjadi daftar objek Place.
       _favoritePlaces = favoritesJson.map((jsonString) => Place.fromJson(jsonDecode(jsonString))).toList();
     }
+    _isLoading = false;
     // Beri tahu UI bahwa data awal telah dimuat.
     notifyListeners();
   }
