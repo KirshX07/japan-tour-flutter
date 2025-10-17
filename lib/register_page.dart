@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/register_page.dart';
 import 'package:flutter_app/user_database.dart';
-import 'home_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _isObscure = true;
@@ -20,54 +18,37 @@ class _LoginPageState extends State<LoginPage> {
     return emailRegex.hasMatch(email);
   }
 
-  void _login() {
+  void _register() {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showSnackBar("⚠️ Email and Password are required", Colors.orange);
+      return;
+    }
 
     if (!_isValidEmail(email)) {
       _showSnackBar("⚠️ Invalid email format", Colors.orange);
       return;
     }
 
-    if (!registeredUsers.containsKey(email) ||
-        registeredUsers[email] != password) {
-      _showSnackBar("❌ Incorrect Email / Password", Colors.redAccent);
+    if (registeredUsers.containsKey(email)) {
+      _showSnackBar("⚠️ Email already registered", Colors.redAccent);
       return;
     }
 
-    _navigateToHome(email);
-  }
+    // Add user to the database
+    registeredUsers[email] = password;
 
-  void _navigateToRegisterPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const RegisterPage()),
-    );
-  }
+    // Show success message
+    _showSnackBar("✅ Registration successful! Please log in.", Colors.green);
 
-  void _loginAsGuest() {
-    emailController.clear();
-    passwordController.clear();
-    _navigateToHome("Guest");
-  }
-
-  void _navigateToHome(String username) {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            HomePage(username: username),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          var tween = Tween(begin: 0.8, end: 1.0)
-              .chain(CurveTween(curve: Curves.easeOutBack));
-          return ScaleTransition(
-            scale: animation.drive(tween),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 600),
-      ),
-    );
+    // Navigate back to LoginPage after a short delay
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    });
   }
 
   void _showSnackBar(String message, Color color) {
@@ -83,7 +64,6 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     const primaryColor = Colors.white;
     const accentColor = Colors.deepPurpleAccent;
-    final hintColor = Colors.white70;
 
     return Container(
       decoration: const BoxDecoration(
@@ -95,6 +75,14 @@ class _LoginPageState extends State<LoginPage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
         body: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -109,17 +97,8 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ClipOval(
-                    child: Image.asset(
-                      "assets/Cerydra.jpg",
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
                   const Text(
-                    "Welcome Back",
+                    "Create Account",
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
@@ -128,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const Text(
-                    "Sign in to continue your journey",
+                    "Start your journey with us",
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                   const SizedBox(height: 25),
@@ -149,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Tombol Login
+                  // Tombol Register
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -161,7 +140,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         padding: EdgeInsets.zero,
                       ),
-                      onPressed: _login,
+                      onPressed: _register,
                       child: Ink(
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
@@ -175,7 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                           alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           child: const Text(
-                            "Login",
+                            "Register",
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.white,
@@ -184,57 +163,6 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Tombol Register
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: primaryColor.withOpacity(0.8),
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      onPressed: _navigateToRegisterPage, // Changed this
-                      child: Text(
-                        "Register",
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: primaryColor.withOpacity(0.9),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  TextButton(
-                    onPressed: _loginAsGuest,
-                    child: Text(
-                      "Continue as Guest",
-                      style: TextStyle(
-                        color: hintColor,
-                        decoration: TextDecoration.underline,
-                        decorationColor: hintColor,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Your next journey starts here.",
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontStyle: FontStyle.italic,
                     ),
                   ),
                 ],

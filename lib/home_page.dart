@@ -19,6 +19,9 @@ import 'package:flutter_app/pages/waypoint_page.dart';
 import 'package:flutter_app/pages/place_detail_page.dart';
 import 'package:flutter_app/widgets/shared_widgets.dart';
 import 'package:flutter_app/widgets/page_transitions.dart';
+import 'package:flutter_app/widgets/ai_assistant_widget.dart';
+import 'package:getwidget/getwidget.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 
@@ -60,6 +63,14 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  void _showAiAssistant(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const AiAssistantWidget(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -72,7 +83,9 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: PageView.builder(
+        body: Stack(
+        children: [
+        PageView.builder(
           controller: _pageController,
           itemCount: _pages.length,
           itemBuilder: (context, index) {
@@ -97,6 +110,18 @@ class _HomePageState extends State<HomePage> {
               _currentIndex = index;
             });
           },
+        ),
+        Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              mini: true,
+              onPressed: () => _showAiAssistant(context),
+              backgroundColor: Colors.deepPurpleAccent.withOpacity(0.8),
+              child: const Icon(Icons.support_agent, color: Colors.white),
+            ),
+          ),
+        ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: FloatingActionButton(
@@ -191,9 +216,6 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> with TickerProviderStateMixin {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-
   final List<Map<String, dynamic>> menuItems = [
     {"icon": Icons.hotel, "label": "Hotel", "page": const HotelPage()},
     {
@@ -262,7 +284,6 @@ class _HomeContentState extends State<HomeContent> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() => setState(() => _searchQuery = _searchController.text.toLowerCase()));
     _popularController = PageController(viewportFraction: 0.78);
     _seasonController = PageController(viewportFraction: 0.88);
     _pulseController = AnimationController(
@@ -303,7 +324,6 @@ class _HomeContentState extends State<HomeContent> with TickerProviderStateMixin
     _popularController.dispose();
     _seasonController.dispose();
     _pulseController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -314,6 +334,8 @@ class _HomeContentState extends State<HomeContent> with TickerProviderStateMixin
         padding: const EdgeInsets.all(16),
         children: [
           _buildHeroBanner(),
+          const SizedBox(height: 20),
+          const _DynamicDateTime(),
           const SizedBox(height: 20),
           _buildSearchBar(),
           const SizedBox(height: 20),
@@ -411,19 +433,96 @@ class _HomeContentState extends State<HomeContent> with TickerProviderStateMixin
   }
 
   Widget _buildSearchBar() {
-    return TextField(
-      controller: _searchController,
-      style: const TextStyle(color: Colors.black87, fontFamily: 'Poppins'),
-      decoration: InputDecoration(
-        hintText: 'Search recommendations...',
+    // Combine all searchable data into a single list of maps
+    final List<Map<String, String>> searchList = [
+      ...popularPlaces.map((p) => {'title': p.name, 'type': 'Place', 'description': p.description}),
+      ...eventsAndPromos.map((e) => {'title': e['title']!, 'type': 'Event', 'description': e['title']!}),
+      ...souvenirs.map((s) => {'title': s['title']!, 'type': 'Souvenir', 'description': 'A nice souvenir'}),
+      ...homeList.map((h) => {'title': h['title']!, 'subtitle': h['subtitle']!, 'type': 'Recommendation'}),
+    ];
+
+    return GFSearchBar<Map<String, String>>(
+      searchList: searchList,
+      searchQueryBuilder: (query, list) {
+        if (query.isEmpty) {
+          return [];
+        }
+        return list.where((item) => item['title']!.toLowerCase().contains(query.toLowerCase())).toList();
+      },
+      overlaySearchListItemBuilder: (Map<String, String>? item) {
+        if (item == null) return const SizedBox.shrink();
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _getIconForItemType(item['type']),
+                color: Colors.deepPurple,
+                size: 22,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['title']!,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
+                    ),
+                    if (item.containsKey('subtitle') && item['subtitle']!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2.0),
+                        child: Text(
+                          item['subtitle']!,
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontFamily: 'Poppins'),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+            ],
+          ),
+        );
+      },
+      onItemSelected: (Map<String, String>? item) {
+        if (item == null) return;
+        // You can navigate to a detail page here based on the item type
+        print('Selected: ${item['title']}');
+      },
+      searchBoxInputDecoration: InputDecoration(
+        hintText: 'Search anything in Japan...',
         hintStyle: TextStyle(color: Colors.grey.shade600, fontFamily: 'Poppins'),
         prefixIcon: const Icon(Icons.search, color: Colors.deepPurpleAccent),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.9),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        fillColor: Colors.white.withOpacity(0.95),
+        contentPadding: const EdgeInsets.symmetric(vertical: 14),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.deepPurpleAccent, width: 1.5),
+        ),
       ),
     );
+  }
+
+  IconData _getIconForItemType(String? type) {
+    switch (type) {
+      case 'Place':
+        return Icons.place_outlined;
+      case 'Event':
+        return Icons.event_available_outlined;
+      case 'Souvenir':
+        return Icons.card_giftcard_outlined;
+      case 'Recommendation':
+        return Icons.lightbulb_outline;
+      default:
+        return Icons.search;
+    }
   }
 
   Widget _buildSectionTitle(String title) {
@@ -619,24 +718,12 @@ class _HomeContentState extends State<HomeContent> with TickerProviderStateMixin
   }
 
   Widget _buildHomeList() {
-    final filteredList = homeList.where((item) =>
-      item['title']!.toLowerCase().contains(_searchQuery) ||
-      item['subtitle']!.toLowerCase().contains(_searchQuery)
-    ).toList();
-
-    if (_searchQuery.isNotEmpty && filteredList.isEmpty) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(20.0),
-        child: Text("No recommendations found.", style: TextStyle(color: Colors.white70, fontFamily: 'Poppins')),
-      ));
-    }
-
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: filteredList.length,
+      itemCount: homeList.length,
       itemBuilder: (context, index) {
-        final item = filteredList[index];
+        final item = homeList[index];
         return AnimatedListItem(
           index: index,
           child: Card(
@@ -648,11 +735,101 @@ class _HomeContentState extends State<HomeContent> with TickerProviderStateMixin
               title: Text(item['title']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontFamily: 'Poppins')),
               subtitle: Text(item['subtitle']!, style: const TextStyle(color: Colors.white70, fontFamily: 'Poppins')),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white70),
-              onTap: () {},
+              onTap: () {
+                // Maybe navigate to a detail page or show more info
+              },
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _DynamicDateTime extends StatefulWidget {
+  const _DynamicDateTime({Key? key}) : super(key: key);
+
+  @override
+  _DynamicDateTimeState createState() => _DynamicDateTimeState();
+}
+
+class _DynamicDateTimeState extends State<_DynamicDateTime> {
+  late DateTime _now;
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    // Update the time every second
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _now = DateTime.now();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Format the date and time using the intl package
+    final dateFormat = DateFormat('MMMM d, yyyy');
+    final dayFormat = DateFormat('EEEE');
+    final timeFormat = DateFormat('hh:mm:ss a');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.black.withOpacity(0.15),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                dayFormat.format(_now),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+              Text(
+                timeFormat.format(_now),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            dateFormat.format(_now).toUpperCase(),
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 12,
+              fontFamily: 'Poppins',
+              letterSpacing: 1.2,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

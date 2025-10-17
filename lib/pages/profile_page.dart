@@ -39,7 +39,7 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(height: 20),
               AnimatedListItem(delay: 200, child: _buildProfileMenu(context)),
               const SizedBox(height: 20),
-              AnimatedListItem(delay: 300, child: const CopyrightFooter()),
+              const AnimatedListItem(delay: 300, child: CopyrightFooter()),
             ],
           ),
         ),
@@ -48,70 +48,109 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildProfileHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A237E), Color(0xFF4A148C)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.bottomCenter,
+      children: [
+        Container(
+          height: 180,
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            image: const DecorationImage(
+              image: AssetImage('assets/banner.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF4A148C).withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          )
-        ],
-      ),
-      child: Column(
-        children: <Widget>[
-          GestureDetector(
+        Positioned(
+          bottom: -50,
+          child: GestureDetector(
             onTap: () => Navigator.push(
               context,
               FadePageRoute(child: EditProfilePage(username: username)),
             ),
-            child: const Hero(
+            child: Hero(
               tag: 'profile_picture',
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.white,
-                backgroundImage: AssetImage('assets/Cerydra.jpg'),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Colors.deepPurpleAccent, Colors.purpleAccent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3), // ✅ perbaikan di sini
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                  ),
+                  child: const CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.white,
+                    backgroundImage: AssetImage('assets/Cerydra.jpg'),
+                  ),
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            _displayName,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+        ),
+        Positioned(
+          bottom: 10,
+          left: 10,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _displayName,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  username,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            username,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.white70,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildProfileMenu(BuildContext context) {
     return Column(
       children: <Widget>[
+        const SizedBox(height: 60),
         _buildMenuCard(
           icon: Icons.edit_outlined,
           text: 'Edit Profile',
           onTap: () {
             Navigator.push(
-                context, FadePageRoute(child: EditProfilePage(username: username)));
+              context,
+              FadePageRoute(child: EditProfilePage(username: username)),
+            );
           },
         ),
         _buildMenuCard(
@@ -128,9 +167,13 @@ class ProfilePage extends StatelessWidget {
               context,
               toastPosition: GFToastPosition.BOTTOM,
               backgroundColor: Colors.deepPurpleAccent,
-              textStyle: const TextStyle(fontSize: 16, color: Colors.white, fontFamily: 'Poppins'),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontFamily: 'Poppins',
+              ),
               trailing: const Icon(Icons.notifications, color: Colors.white),
-              toastDuration: 3, // Durasi dalam detik
+              toastDuration: 3,
             );
           },
         ),
@@ -242,8 +285,10 @@ class ProfilePage extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF2C1D57),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Text('Device Information',
-            style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Device Information',
+          style: TextStyle(color: Colors.white),
+        ),
         content: Text(
           infoText,
           style: const TextStyle(color: Colors.white70, fontSize: 14),
