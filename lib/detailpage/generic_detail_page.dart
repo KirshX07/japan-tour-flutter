@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/models/booking_model.dart';
 import 'package:flutter_app/models/place_model.dart';
 import 'package:flutter_app/models/planner_item_model.dart';
 import 'package:flutter_app/providers/favorites_provider.dart';
 import 'package:flutter_app/providers/planner_provider.dart';
+import 'package:flutter_app/widgets/booking_checkout_widget.dart';
 import 'package:provider/provider.dart';
 
 class GenericDetailPage extends StatelessWidget {
@@ -16,6 +18,34 @@ class GenericDetailPage extends StatelessWidget {
     required this.detailWidgets,
     this.funFact,
   });
+
+  void _showBookingCheckout(BuildContext context) {
+    // Find the category that matches the place's booking category name.
+    final category = bookingData.firstWhere(
+      (c) => c.name == place.bookingCategoryName,
+      orElse: () => bookingData.first, // Fallback
+    );
+
+    // Find the specific item within that category.
+    final item = category.items.firstWhere(
+      (i) => i.name == place.bookingItemName,
+      orElse: () => category.items.first, // Fallback
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        maxChildSize: 0.9,
+        builder: (_, controller) => BookingCheckoutWidget(
+          initialCategory: category,
+          initialItem: item,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,22 +190,44 @@ class GenericDetailPage extends StatelessWidget {
                         ],
                         const SizedBox(height: 28),
                         Center(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _showDatePicker(context, place),
-                            icon: const Icon(Icons.calendar_month_rounded),
-                            label: const Text('Add to Planner'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.greenAccent.shade700,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 36,
-                                vertical: 14,
+                          child: Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () => _showDatePicker(context, place),
+                                icon: const Icon(Icons.calendar_month_rounded),
+                                label: const Text('Add to Planner'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.deepPurpleAccent,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                              ElevatedButton.icon(
+                                onPressed: () => _showBookingCheckout(context),
+                                icon: const Icon(Icons.shopping_cart_checkout_rounded),
+                                label: const Text('Book Now'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.tealAccent,
+                                  foregroundColor: Colors.black87,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
                               ),
-                              elevation: 4,
-                            ),
+                            ],
                           ),
                         ),
                       ],

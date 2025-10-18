@@ -7,6 +7,8 @@ class Place {
   final String? peakSeason;
   final String? longDescription;
   final double? rating; // ✅ Tambahkan rating
+  final String? bookingCategoryName;
+  final String? bookingItemName;
 
   const Place({
     required this.id,
@@ -17,6 +19,8 @@ class Place {
     this.peakSeason,
     this.longDescription,
     this.rating, // ✅ tambahkan ke konstruktor
+    this.bookingCategoryName,
+    this.bookingItemName,
   });
 
   Map<String, dynamic> toJson() => {

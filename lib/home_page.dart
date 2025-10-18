@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/pages/animated_page_header.dart';
 import 'package:flutter_app/copyright_footer.dart';
 import 'package:flutter_app/models/place_model.dart';
+import 'package:flutter_app/models/booking_model.dart';
 import 'package:flutter_app/providers/favorites_provider.dart';
 import 'package:flutter_app/pages/amusement_page.dart';
 import 'package:flutter_app/pages/favorites_page.dart';
@@ -12,6 +13,7 @@ import 'package:flutter_app/pages/food_and_drink_page.dart';
 import 'package:flutter_app/pages/hotel_page.dart';
 import 'package:flutter_app/pages/schedule_page.dart';
 import 'package:flutter_app/pages/profile_page.dart';
+import 'package:flutter_app/pages/payment_page.dart';
 import 'package:flutter_app/pages/help_and_emergency_page.dart';
 import 'package:flutter_app/pages/shop_page.dart';
 import 'package:flutter_app/pages/transport_page.dart';
@@ -20,6 +22,7 @@ import 'package:flutter_app/pages/place_detail_page.dart';
 import 'package:flutter_app/widgets/shared_widgets.dart';
 import 'package:flutter_app/widgets/page_transitions.dart';
 import 'package:flutter_app/widgets/ai_assistant_widget.dart';
+import 'package:flutter_app/widgets/booking_checkout_widget.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -71,6 +74,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _showBookingCheckout(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(initialChildSize: 0.75, maxChildSize: 0.9, builder: (_, controller) => BookingCheckoutWidget()),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -111,6 +122,16 @@ class _HomePageState extends State<HomePage> {
             });
           },
         ),
+        Positioned(
+            bottom: 80, // Positioned above the other FAB
+            right: 16,
+            child: FloatingActionButton(
+              mini: true,
+              onPressed: () => _showBookingCheckout(context),
+              backgroundColor: Colors.tealAccent.withOpacity(0.9),
+              child: const Icon(Icons.shopping_cart_checkout, color: Colors.black87),
+            ),
+          ),
         Positioned(
             bottom: 16,
             right: 16,
@@ -248,10 +269,10 @@ class _HomeContentState extends State<HomeContent> with TickerProviderStateMixin
   ];
 
   final List<Place> popularPlaces = const [
-    Place(id: 'p1', name: 'Fushimi Inari, Kyoto', imagePath: 'assets/popular/kyoto.png', description: 'Iconic shrine with thousands of torii gates.'),
-    Place(id: 'p2', name: 'Shibuya Crossing, Tokyo', imagePath: 'assets/popular/shibuya.png', description: 'The world\'s busiest intersection.'),
-    Place(id: 'p3', name: 'Hakone Onsen', imagePath: 'assets/popular/hakone.png', description: 'Famous for hot springs and nature.'),
-    Place(id: 'p4', name: 'Mount Fuji', imagePath: 'assets/popular/mtfuji.png', description: 'Japan\'s iconic, sacred mountain.'),
+    Place(id: 'p1', name: 'Fushimi Inari, Kyoto', imagePath: 'assets/popular/kyoto.png', description: 'Iconic shrine with thousands of torii gates.', bookingCategoryName: 'Experience', bookingItemName: 'City Tour'),
+    Place(id: 'p2', name: 'Shibuya Crossing, Tokyo', imagePath: 'assets/popular/shibuya.png', description: 'The world\'s busiest intersection.', bookingCategoryName: 'Experience', bookingItemName: 'City Tour'),
+    Place(id: 'p3', name: 'Hakone Onsen', imagePath: 'assets/popular/hakone.png', description: 'Famous for hot springs and nature.', bookingCategoryName: 'Hotel', bookingItemName: 'Standard Room'),
+    Place(id: 'p4', name: 'Mount Fuji', imagePath: 'assets/popular/mtfuji.png', description: 'Japan\'s iconic, sacred mountain.', bookingCategoryName: 'Experience', bookingItemName: 'City Tour'),
   ];
 
   final List<Map<String, String>> eventsAndPromos = const [
@@ -906,6 +927,27 @@ class _PopularPlaceCardState extends State<_PopularPlaceCard> {
                     ),
                   ),
                 ),
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: ElevatedButton(
+onPressed: () {
+                      final category = bookingData.firstWhere(
+                        (c) => c.name == widget.place.bookingCategoryName,
+                        orElse: () => bookingData.first,
+                      );
+                      final item = category.items.firstWhere(
+                        (i) => i.name == widget.place.bookingItemName,
+                        orElse: () => category.items.first,
+                      );
+
+                      showModalBottomSheet(
+                          context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (_) => DraggableScrollableSheet(initialChildSize: 0.75, maxChildSize: 0.9, builder: (_, controller) => BookingCheckoutWidget(initialCategory: category, initialItem: item)));
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black87, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
+                    child: const Text('Book Now'),
+                  ),
+                )
               ],
             ),
           ),
